@@ -220,16 +220,15 @@ def detect_pinbar(ticker, ohlc_data, rsi_period, atr_period, rsi_bullish_thresho
             candle_index = -2  # -1 is current forming week, -2 is previous completed week
             signal_date = "Previous Week"
         else:  # daily
-            # Daily: Use previous day if in active session, current day if session closed
-            # Market hours approximation: 9:30 AM - 4:00 PM ET (13:30 - 20:00 UTC)
-            current_hour_utc = current_time.hour
+            # Daily: Use current/latest session bar (can tolerate emerging signals)
+            candle_index = -1  # Most recent bar
             
-            if 13 <= current_hour_utc <= 20:  # During market hours
-                candle_index = -2  # Previous day (confirmed)
-                signal_date = "Previous Day"
-            else:  # After market close
-                candle_index = -1  # Current day (should be complete)
-                signal_date = "Today (Closed)"
+            # Get the actual date of the signal candle
+            try:
+                signal_timestamp = ohlc_data['Close'][ticker].dropna().index[candle_index]
+                signal_date = signal_timestamp.strftime('%Y-%m-%d')
+            except:
+                signal_date = "Latest"
         
         # Get OHLC data for the specified candle
         open_series = ohlc_data['Open'][ticker].dropna()
@@ -292,8 +291,7 @@ def detect_pinbar(ticker, ohlc_data, rsi_period, atr_period, rsi_bullish_thresho
                 'rsi': round(rsi, 2),
                 'atr': round(atr, 2),
                 'candle_range': round(candle_range, 2),
-                'signal_date': signal_date,
-                'timeframe': timeframe.title()
+                'signal_date': signal_date
             }
         
         # Bearish Pinbar Detection  
@@ -309,8 +307,7 @@ def detect_pinbar(ticker, ohlc_data, rsi_period, atr_period, rsi_bullish_thresho
                 'rsi': round(rsi, 2),
                 'atr': round(atr, 2),
                 'candle_range': round(candle_range, 2),
-                'signal_date': signal_date,
-                'timeframe': timeframe.title()
+                'signal_date': signal_date
             }
         
         return None
@@ -407,7 +404,7 @@ progress_bar.empty()
 col1, col2 = st.columns(2)
 
 with col1:
-    st.subheader("📊 Weekly Pinbar Signals")
+    st.subheader("📊 Weekly Pinbar Signals (Previous week confirmed data)")
     if weekly_results:
         weekly_df = pd.DataFrame(weekly_results)
         # Sort by signal type (Bullish first, then Bearish)
@@ -423,16 +420,12 @@ with col1:
         
         styled_weekly = weekly_df.style.applymap(color_signal, subset=['signal'])
         st.dataframe(styled_weekly, use_container_width=True, height=400)
-        
-        # Show confirmation status
-        if weekly_results:
-            st.info(f"📅 **Confirmed Signals**: {weekly_results[0]['signal_date']} (Non-Repainting)")
         st.write(f"📈 **{len(weekly_results)} Weekly Pinbar signals found**")
     else:
         st.info("No weekly pinbar signals found with current criteria.")
 
 with col2:
-    st.subheader("📊 Daily Pinbar Signals") 
+    st.subheader("📊 Daily Pinbar Signals (Latest session)") 
     if daily_results:
         daily_df = pd.DataFrame(daily_results)
         # Sort by signal type (Bullish first, then Bearish)
@@ -440,10 +433,6 @@ with col2:
         
         styled_daily = daily_df.style.applymap(color_signal, subset=['signal'])
         st.dataframe(styled_daily, use_container_width=True, height=400)
-        
-        # Show confirmation status
-        if daily_results:
-            st.info(f"📅 **Confirmed Signals**: {daily_results[0]['signal_date']} (Non-Repainting)")
         st.write(f"📈 **{len(daily_results)} Daily Pinbar signals found**")
     else:
         st.info("No daily pinbar signals found with current criteria.")
@@ -552,17 +541,18 @@ st.subheader("ℹ️ Pinbar Detection Criteria")
 
 with st.expander("📋 Detection Rules"):
     st.write("""
-    **🚫 NON-REPAINTING SIGNALS (CONFIRMED CANDLES ONLY)**
+    **🔄 SIGNAL TIMING LOGIC**
     
-    **Weekly Signals:**
-    - Uses previous completed week (1 bar back)
-    - Current week is still forming, so we use the last completed week
-    - Ensures weekly candle is fully confirmed and closed
+    **Weekly Signals (Previous Week Confirmed):**
+    - Uses previous completed week's data (non-repainting)
+    - Current week is still forming, so we use last completed week
+    - Provides confirmed weekly pinbar signals for reliable analysis
     
-    **Daily Signals:**
-    - During market hours (9:30 AM - 4:00 PM ET): Uses previous day
-    - After market close: Uses current day (completed candle)
-    - Ensures daily candle is confirmed before signaling
+    **Daily Signals (Latest Session):**
+    - Uses current/latest session bar (emerging signals allowed)
+    - Shows actual date of the signal candle (YYYY-MM-DD format)
+    - Can tolerate emerging signals for faster detection
+    - Updates throughout the trading session
     
     **Bullish Pinbar Criteria:**
     - Lower wick ≥ 50% of total candle range (High - Low)
