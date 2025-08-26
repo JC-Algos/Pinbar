@@ -3,7 +3,6 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 import numpy as np
-import talib
 from datetime import datetime, timedelta
 from io import BytesIO
 
@@ -116,22 +115,48 @@ def fetch_data(universe):
 
 # ---------- 3.  PINBAR DETECTION FUNCTIONS ----------
 def calculate_rsi(close_prices, period=9):
-    """Calculate RSI using talib"""
+    """Calculate RSI manually"""
     try:
         if len(close_prices) < period + 1:
             return np.nan
-        rsi = talib.RSI(close_prices.values, timeperiod=period)
-        return rsi[-1] if not np.isnan(rsi[-1]) else np.nan
+        
+        # Calculate price changes
+        delta = close_prices.diff()
+        
+        # Separate gains and losses
+        gain = delta.where(delta > 0, 0)
+        loss = -delta.where(delta < 0, 0)
+        
+        # Calculate initial averages
+        avg_gain = gain.rolling(window=period).mean()
+        avg_loss = loss.rolling(window=period).mean()
+        
+        # Calculate RSI
+        rs = avg_gain / avg_loss
+        rsi = 100 - (100 / (1 + rs))
+        
+        return rsi.iloc[-1] if not np.isnan(rsi.iloc[-1]) else np.nan
     except:
         return np.nan
 
 def calculate_atr(high_prices, low_prices, close_prices, period=9):
-    """Calculate ATR using talib"""
+    """Calculate ATR manually"""
     try:
         if len(high_prices) < period + 1:
             return np.nan
-        atr = talib.ATR(high_prices.values, low_prices.values, close_prices.values, timeperiod=period)
-        return atr[-1] if not np.isnan(atr[-1]) else np.nan
+        
+        # Calculate True Range components
+        hl = high_prices - low_prices
+        hc = abs(high_prices - close_prices.shift(1))
+        lc = abs(low_prices - close_prices.shift(1))
+        
+        # True Range is the maximum of the three
+        tr = pd.concat([hl, hc, lc], axis=1).max(axis=1)
+        
+        # ATR is the moving average of True Range
+        atr = tr.rolling(window=period).mean()
+        
+        return atr.iloc[-1] if not np.isnan(atr.iloc[-1]) else np.nan
     except:
         return np.nan
 
