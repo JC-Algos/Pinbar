@@ -15,37 +15,32 @@ WORLD_TICKERS = ["^GSPC","^NDX","^RUT","^HSI","3032.HK","^STOXX50E","^BSESN","^K
                  "EWS","EIDO","EPHE","THD","INDA","KWEB","QQQ","SPY","IWM","VNQ","GLD","SLV",
                  "USO","UNG","VEA","VWO","VTI","VXUS"][:150]
 
-US_TICKERS = ["AAPL", "ABBV", "ABNB", "ABSV", "ABT", "ACN", "ADBE", "ADP", "ADSK", "ALGN", 
-              "AMAT", "AMD", "AMGN", "AMZN", "AMT", "ANET", "APA", "ARGO", "ARM", "AS", 
-              "ASML", "AVGO", "BA", "BAC", "BDX", "BLK", "BKNG", "BMRG", "BMY", "BRK-B", 
-              "CAT", "CB", "CCL", "CDNS", "CF", "CHTR", "CME", "COP", "COST", "CRM", 
-              "CRWD", "CSCO", "CSX", "CVS", "CVX", "DDOG", "DE", "DHR", "DIS", "DLTR", 
-              "DVN", "DXCM", "EOG", "EXM", "F", "FANG", "FCX", "FDD", "FTNT", "FUTU", 
-              "G", "GE", "GILD", "GIS", "GM", "GOOGL", "GS", "HAL", "HD", "HON", "HSY", 
-              "IBM", "ICE", "IDXX", "INTC", "INTU", "ISRG", "ITW", "IWM", "JNJ", "JPM", 
-              "JPU", "KD", "KHC", "KMB", "KMI", "KO", "LEN", "LIAT", "LLY", "LMT", "LOW", 
-              "LRCX", "MA", "MAR", "MCD", "MDLZ", "META", "MMM", "MRK", "MRO", "MSFT", 
-              "MU", "NEE", "NFLX", "NKE", "NOW", "NRG", "NVO", "NVDA", "NXTR", "ORCL", 
-              "ORLY", "OXY", "PANW", "PEP", "PFE", "PG", "PGR", "PLTR", "PM", "PSX", 
-              "QCOM", "REGN", "RTX", "SBUX", "SLB", "SMH", "SNOW", "SPGI", "TGT", "TJX", 
-              "TMO", "TRV", "TSLA", "TSM", "TTD", "TTWO", "TXN", "TEAM", "ULTA", "UNH", 
-              "UNP", "UPS", "V", "VLO", "VMO", "VST", "VZ", "WDH", "WMB", "WMT", "WRTC", 
-              "XLC", "XLE", "XLF", "XLI", "XLK", "XLP", "XLRE", "XLU", "XLV", "XLY", 
-              "XOM", "YUM", "ZS", "BX", "COIN",
-              # Additional tickers from original code...
-              "GOOG", "TMUS", "AZN", "LIN", "SHOP", "PDD", "CMCSA", "APP", "MELI", "VRTX", 
-              "SNYS", "KLAC", "MSTR", "ADI", "CEG", "DASH", "CTAS", "TRI", "MRVL", "PYPL", 
-              "WDAY", "AEP", "MNST", "ROP", "AXON", "NXPI", "FAST", "PAYX", "PCAR", "KDP", 
-              "CCEP", "ROST", "CPRT", "BKR", "EXC", "XEL", "CSGP", "EA", "MCHP", "VRSK", 
-              "CTSH", "GEHC", "WBD", "ODFL", "LULU", "ON", "CDW", "GFS", "BIIB",
-              "WFC", "AXP", "MS", "T", "UBER", "SCHW", "BSX", "SYK", "C", "GEV", 
-              "ETN", "MMC", "APH", "MDT", "KKR", "PLD", "WELL", "MO", "SO", "TT", 
-              "WM", "HCA", "FI", "DUK", "EQIX", "SHW", "MCK", "ELV", "MCO", "PH", 
-              "AJG", "CI", "TDG", "AON", "RSG", "DELL", "APO", "COF", "ZTS", "ECL", 
-              "RCL", "GD", "CL", "HWM", "CMG", "PNC", "NOC", "MSI", "USB", "EMR", 
-              "JCI", "BK", "APD", "AZO", "SPG", "DLR", "CARR", "HLT", "NEM", "NSC", 
-              "AFL", "COR", "ALL", "MET", "PWR", "PSA", "TFC", "FDX", "GWW", "OKE", 
-              "O", "AIG", "SRE", "AMP", "MPC", "NDAQ"]
+US_TICKERS = ["AAPL", "ABBV", "ABNB", "ABSV", "ABT", "ACN", "ADBE", "ADP", "ADSK", "AEP", "AFL", "AIG", 
+              "ALGN", "ALL", "AMAT", "AMD", "AMGN", "AMP", "AMT", "AMZN", "ANET", "AON", "APA", "APD", 
+              "APH", "APO", "APP", "ARGO", "ARM", "AS", "ASML", "AVGO", "AXP", "AZN", "AZO", "BA", 
+              "BAC", "BDX", "BIIB", "BK", "BKR", "BKNG", "BLK", "BMRG", "BMY", "BRK-B", "BSX", "BX", 
+              "C", "CARR", "CAT", "CB", "CCEP", "CCL", "CDNS", "CDW", "CEG", "CF", "CHTR", "CI", 
+              "CL", "CME", "CMG", "CMCSA", "COIN", "COF", "COP", "COR", "COST", "CPRT", "CRM", 
+              "CRWD", "CSCO", "CSGP", "CSX", "CTAS", "CTSH", "CVS", "CVX", "DASH", "DDOG", "DE", 
+              "DELL", "DHR", "DIS", "DLR", "DLTR", "DUK", "DVN", "DXCM", "EA", "ECL", "ELV", 
+              "EMR", "EOG", "EQIX", "EXC", "EXM", "F", "FANG", "FAST", "FCX", "FDD", "FDX", 
+              "FI", "FTNT", "FUTU", "G", "GD", "GE", "GEHC", "GEV", "GFS", "GILD", "GIS", 
+              "GM", "GOOG", "GOOGL", "GS", "GWW", "HAL", "HCA", "HD", "HLT", "HON", "HSY", 
+              "HWM", "IBM", "ICE", "IDXX", "INTC", "INTU", "ISRG", "ITW", "IWM", "JCI", "JNJ", 
+              "JPM", "JPU", "KD", "KDP", "KHC", "KKR", "KLAC", "KMB", "KMI", "KO", "LEN", 
+              "LIAT", "LIN", "LLY", "LMT", "LOW", "LRCX", "LULU", "MA", "MAR", "MCD", "MCK", 
+              "MCO", "MDLZ", "MDT", "MELI", "META", "MCHP", "MMC", "MMM", "MNST", "MO", "MPC", 
+              "MRK", "MRO", "MS", "MSFT", "MSTR", "MU", "NEE", "NEM", "NFLX", "NKE", "NOC", 
+              "NOW", "NDAQ", "NRG", "NSC", "NVO", "NVDA", "NXPI", "NXTR", "O", "ODFL", "OKE", 
+              "ON", "ORCL", "ORLY", "OXY", "PANW", "PAYX", "PCAR", "PDD", "PEP", "PFE", "PG", 
+              "PGR", "PH", "PLD", "PLTR", "PM", "PNC", "PSA", "PSX", "PWR", "PYPL", "QCOM", 
+              "RCL", "REGN", "ROP", "ROST", "RSG", "RTX", "SBUX", "SCHW", "SHW", "SLB", "SMH", 
+              "SNOW", "SNYS", "SO", "SPG", "SPGI", "SRE", "SYK", "T", "TEAM", "TDG", "TFC", 
+              "TGT", "TJX", "TMO", "TMUS", "TRV", "TSM", "TSLA", "TT", "TTD", "TTWO", "TXN", 
+              "TRI", "UBER", "ULTA", "UNH", "UNP", "UPS", "USB", "V", "VLO", "VMO", "VRSK", 
+              "VST", "VRTX", "VZ", "WBD", "WDH", "WDAY", "WELL", "WFC", "WM", "WMB", "WMT", 
+              "WRTC", "XEL", "XLC", "XLE", "XLF", "XLI", "XLK", "XLP", "XLRE", "XLU", "XLV", 
+              "XLY", "XOM", "YUM", "ZS", "ZTS"]
 
 HK_TICKERS = ["0001.HK","0002.HK","0003.HK","0005.HK","0006.HK","0011.HK","0012.HK","0016.HK","0017.HK","0019.HK",
               "0020.HK","0027.HK","0066.HK","0101.HK","0144.HK","0168.HK","0175.HK","0177.HK","0220.HK","0241.HK",
@@ -73,9 +68,9 @@ HK_TICKERS = ["0001.HK","0002.HK","0003.HK","0005.HK","0006.HK","0011.HK","0012.
               "9901.HK","9922.HK","9923.HK","9961.HK","9988.HK","9992.HK","9995.HK","9999.HK"]
 
 UNIVERSE_MAP = {
-    "World": {"tickers": WORLD_TICKERS},
-    "US":    {"tickers": US_TICKERS},
-    "HK":    {"tickers": HK_TICKERS}
+    "HK": {"tickers": HK_TICKERS},
+    "US": {"tickers": US_TICKERS},
+    "World": {"tickers": WORLD_TICKERS}
 }
 
 # ---------- 2.  DATA FETCHING ----------
@@ -198,7 +193,7 @@ def calculate_atr(high_prices, low_prices, close_prices, period=9):
     except:
         return np.nan
 
-def detect_pinbar(ticker, ohlc_data, rsi_period, atr_period, rsi_bullish_threshold, rsi_bearish_threshold, timeframe='daily'):
+def detect_pinbar(ticker, ohlc_data, rsi_period, atr_period, rsi_bullish_threshold, rsi_bearish_threshold, atr_multiple, wick_proportion, timeframe='daily'):
     """
     Detect pinbar patterns for a single ticker using CONFIRMED candles only (non-repainting)
     
@@ -274,14 +269,14 @@ def detect_pinbar(ticker, ohlc_data, rsi_period, atr_period, rsi_bullish_thresho
         if np.isnan(rsi) or np.isnan(atr) or atr == 0:
             return None
         
-        # Check if candle range meets ATR requirement (>= 1 ATR)
-        if candle_range < atr:
+        # Check if candle range meets ATR requirement (>= ATR multiple)
+        if candle_range < (atr * atr_multiple):
             return None
         
         # Bullish Pinbar Detection
-        if (lower_wick >= 0.5 * candle_range and  # Lower wick at least 50% of candle
-            lower_wick >= 2 * upper_wick and      # Lower wick at least 2x upper wick
-            rsi <= rsi_bullish_threshold):        # RSI oversold
+        if (lower_wick >= wick_proportion * candle_range and  # Lower wick at least proportion% of candle
+            lower_wick >= 2 * upper_wick and                  # Lower wick at least 2x upper wick
+            rsi <= rsi_bullish_threshold):                     # RSI oversold
             
             return {
                 'ticker': ticker,
@@ -295,9 +290,9 @@ def detect_pinbar(ticker, ohlc_data, rsi_period, atr_period, rsi_bullish_thresho
             }
         
         # Bearish Pinbar Detection  
-        elif (upper_wick >= 0.5 * candle_range and  # Upper wick at least 50% of candle
-              upper_wick >= 2 * lower_wick and      # Upper wick at least 2x lower wick
-              rsi >= rsi_bearish_threshold):        # RSI overbought
+        elif (upper_wick >= wick_proportion * candle_range and  # Upper wick at least proportion% of candle
+              upper_wick >= 2 * lower_wick and                  # Upper wick at least 2x lower wick
+              rsi >= rsi_bearish_threshold):                     # RSI overbought
             
             return {
                 'ticker': ticker,
@@ -330,6 +325,12 @@ atr_period = st.sidebar.number_input("ATR Period", min_value=3, max_value=50, va
 # RSI thresholds
 rsi_bullish_threshold = st.sidebar.number_input("RSI Bullish Threshold (≤)", min_value=10, max_value=50, value=30)
 rsi_bearish_threshold = st.sidebar.number_input("RSI Bearish Threshold (≥)", min_value=50, max_value=90, value=70)
+
+# ATR multiple for candle range filter
+atr_multiple = st.sidebar.number_input("ATR Multiple For Bar", min_value=0.1, max_value=5.0, value=1.0, step=0.1)
+
+# Wick proportion of bar
+wick_proportion = st.sidebar.number_input("Wick Proportion Of Bar", min_value=0.1, max_value=1.0, value=0.5, step=0.1)
 
 # Add refresh button
 if st.sidebar.button("🔄 Refresh Data"):
@@ -384,7 +385,7 @@ for i, ticker in enumerate(tickers):
     # Weekly pinbar detection - using confirmed previous week
     weekly_signal = detect_pinbar(
         ticker, weekly_data, rsi_period, atr_period, 
-        rsi_bullish_threshold, rsi_bearish_threshold, timeframe='weekly'
+        rsi_bullish_threshold, rsi_bearish_threshold, atr_multiple, wick_proportion, timeframe='weekly'
     )
     if weekly_signal:
         weekly_results.append(weekly_signal)
@@ -392,7 +393,7 @@ for i, ticker in enumerate(tickers):
     # Daily pinbar detection - using confirmed previous/current day based on session
     daily_signal = detect_pinbar(
         ticker, daily_data, rsi_period, atr_period,
-        rsi_bullish_threshold, rsi_bearish_threshold, timeframe='daily'
+        rsi_bullish_threshold, rsi_bearish_threshold, atr_multiple, wick_proportion, timeframe='daily'
     )
     if daily_signal:
         daily_results.append(daily_signal)
@@ -404,7 +405,7 @@ progress_bar.empty()
 col1, col2 = st.columns(2)
 
 with col1:
-    st.subheader("📊 Weekly Pinbar Signals (Previous week confirmed data)")
+    st.subheader("📊 Weekly Pinbar Signals (Previous Week Confirmed Data)")
     if weekly_results:
         weekly_df = pd.DataFrame(weekly_results)
         # Sort by signal type (Bullish first, then Bearish)
@@ -425,7 +426,7 @@ with col1:
         st.info("No weekly pinbar signals found with current criteria.")
 
 with col2:
-    st.subheader("📊 Daily Pinbar Signals (Latest session)") 
+    st.subheader("📊 Daily Pinbar Signals (Latest Session)") 
     if daily_results:
         daily_df = pd.DataFrame(daily_results)
         # Sort by signal type (Bullish first, then Bearish)
@@ -555,16 +556,16 @@ with st.expander("📋 Detection Rules"):
     - Updates throughout the trading session
     
     **Bullish Pinbar Criteria:**
-    - Lower wick ≥ 50% of total candle range (High - Low)
+    - Lower wick ≥ wick proportion of total candle range (default: 50%)
     - Lower wick ≥ 2× upper wick size
     - RSI ≤ threshold (default: 30) **calculated using confirmed data only**
-    - Candle range (High - Low) ≥ 1 ATR **calculated using confirmed data only**
+    - Candle range (High - Low) ≥ ATR multiple (default: 1.0 ATR)
     
     **Bearish Pinbar Criteria:**  
-    - Upper wick ≥ 50% of total candle range (High - Low)
+    - Upper wick ≥ wick proportion of total candle range (default: 50%)
     - Upper wick ≥ 2× lower wick size
     - RSI ≥ threshold (default: 70) **calculated using confirmed data only**
-    - Candle range (High - Low) ≥ 1 ATR **calculated using confirmed data only**
+    - Candle range (High - Low) ≥ ATR multiple (default: 1.0 ATR)
     
     **Technical Indicators:**
     - RSI: Relative Strength Index for momentum
