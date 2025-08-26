@@ -85,33 +85,71 @@ def fetch_data(universe):
     tickers = cfg["tickers"]
     end = datetime.today()
     
-    # Weekly data - resample to week ending Friday
-    weekly_start = end - timedelta(weeks=50)
-    weekly_data = yf.download(tickers, start=weekly_start, end=end, progress=False)
-    weekly_ohlc = {
-        'Open': weekly_data['Open'].resample('W-FRI').first(),
-        'High': weekly_data['High'].resample('W-FRI').max(), 
-        'Low': weekly_data['Low'].resample('W-FRI').min(),
-        'Close': weekly_data['Close'].resample('W-FRI').last()
-    }
-    
-    # Daily data
-    daily_start = end - timedelta(days=100)
-    daily_data = yf.download(tickers, start=daily_start, end=end, progress=False)
-    daily_ohlc = {
-        'Open': daily_data['Open'],
-        'High': daily_data['High'],
-        'Low': daily_data['Low'], 
-        'Close': daily_data['Close']
-    }
-    
-    # Clean data - forward fill then backward fill
-    for timeframe in [weekly_ohlc, daily_ohlc]:
-        for key in timeframe:
-            timeframe[key] = timeframe[key].fillna(method='ffill').fillna(method='bfill')
-            timeframe[key] = timeframe[key].dropna(axis=1, how="all")
-    
-    return weekly_ohlc, daily_ohlc
+    try:
+        # Weekly data - resample to week ending Friday
+        weekly_start = end - timedelta(weeks=50)
+        weekly_raw = yf.download(tickers, start=weekly_start, end=end, progress=False, threads=False)
+        
+        # Handle single ticker vs multiple tickers data structure
+        if len(tickers) == 1:
+            # Single ticker - yfinance returns different structure
+            ticker = tickers[0]
+            weekly_ohlc = {
+                'Open': pd.DataFrame({ticker: weekly_raw['Open'].resample('W-FRI').first()}),
+                'High': pd.DataFrame({ticker: weekly_raw['High'].resample('W-FRI').max()}), 
+                'Low': pd.DataFrame({ticker: weekly_raw['Low'].resample('W-FRI').min()}),
+                'Close': pd.DataFrame({ticker: weekly_raw['Close'].resample('W-FRI').last()})
+            }
+        else:
+            # Multiple tickers
+            weekly_ohlc = {
+                'Open': weekly_raw['Open'].resample('W-FRI').first(),
+                'High': weekly_raw['High'].resample('W-FRI').max(), 
+                'Low': weekly_raw['Low'].resample('W-FRI').min(),
+                'Close': weekly_raw['Close'].resample('W-FRI').last()
+            }
+        
+        # Daily data
+        daily_start = end - timedelta(days=100)
+        daily_raw = yf.download(tickers, start=daily_start, end=end, progress=False, threads=False)
+        
+        # Handle single ticker vs multiple tickers data structure
+        if len(tickers) == 1:
+            # Single ticker
+            ticker = tickers[0]
+            daily_ohlc = {
+                'Open': pd.DataFrame({ticker: daily_raw['Open']}),
+                'High': pd.DataFrame({ticker: daily_raw['High']}),
+                'Low': pd.DataFrame({ticker: daily_raw['Low']}), 
+                'Close': pd.DataFrame({ticker: daily_raw['Close']})
+            }
+        else:
+            # Multiple tickers
+            daily_ohlc = {
+                'Open': daily_raw['Open'],
+                'High': daily_raw['High'],
+                'Low': daily_raw['Low'], 
+                'Close': daily_raw['Close']
+            }
+        
+        # Clean data - forward fill then backward fill, create stable copy
+        for timeframe in [weekly_ohlc, daily_ohlc]:
+            for key in list(timeframe.keys()):  # Convert to list to avoid iteration issues
+                if timeframe[key] is not None and not timeframe[key].empty:
+                    # Create a stable copy and clean it
+                    cleaned_data = timeframe[key].copy()
+                    cleaned_data = cleaned_data.fillna(method='ffill').fillna(method='bfill')
+                    cleaned_data = cleaned_data.dropna(axis=1, how="all")
+                    timeframe[key] = cleaned_data
+        
+        return weekly_ohlc, daily_ohlc
+        
+    except Exception as e:
+        st.error(f"Error in data fetching: {str(e)}")
+        # Return empty structures to prevent further errors
+        empty_df = pd.DataFrame()
+        empty_ohlc = {'Open': empty_df, 'High': empty_df, 'Low': empty_df, 'Close': empty_df}
+        return empty_ohlc, empty_ohlc
 
 # ---------- 3.  PINBAR DETECTION FUNCTIONS ----------
 def calculate_rsi(close_prices, period=9):
@@ -303,15 +341,34 @@ if st.sidebar.button("🔄 Refresh Data"):
 
 # Fetch data
 try:
-    weekly_data, daily_data = fetch_data(universe)
-    tickers = list(set(weekly_data['Close'].columns) & set(daily_data['Close'].columns))
-    
-    if not tickers:
-        st.error("No valid tickers found in the selected universe.")
-        st.stop()
+    with st.spinner("Fetching market data..."):
+        weekly_data, daily_data = fetch_data(universe)
         
+        # Validate data structure
+        if not weekly_data or not daily_data:
+            st.error("Failed to fetch data. Please try again.")
+            st.stop()
+            
+        # Get valid tickers that exist in both datasets
+        weekly_tickers = set()
+        daily_tickers = set()
+        
+        for key in ['Open', 'High', 'Low', 'Close']:
+            if key in weekly_data and weekly_data[key] is not None and not weekly_data[key].empty:
+                weekly_tickers.update(weekly_data[key].columns)
+            if key in daily_data and daily_data[key] is not None and not daily_data[key].empty:
+                daily_tickers.update(daily_data[key].columns)
+        
+        tickers = list(weekly_tickers & daily_tickers)  # Intersection of both sets
+        tickers = [t for t in tickers if pd.notna(t)]  # Remove any NaN tickers
+        
+        if not tickers:
+            st.error("No valid tickers found in the selected universe. Please try refreshing data.")
+            st.stop()
+            
 except Exception as e:
     st.error(f"Error fetching data: {str(e)}")
+    st.error("Please try refreshing the data or selecting a different universe.")
     st.stop()
 
 # ---------- 5.  PATTERN DETECTION ----------
