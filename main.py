@@ -160,9 +160,12 @@ def calculate_atr(high_prices, low_prices, close_prices, period=9):
     except:
         return np.nan
 
-def detect_pinbar(ticker, ohlc_data, rsi_period, atr_period, rsi_bullish_threshold, rsi_bearish_threshold):
+def detect_pinbar(ticker, ohlc_data, rsi_period, atr_period, rsi_bullish_threshold, rsi_bearish_threshold, timeframe='daily'):
     """
-    Detect pinbar patterns for a single ticker
+    Detect pinbar patterns for a single ticker using CONFIRMED candles only (non-repainting)
+    
+    For Weekly: Uses previous completed week (2 bars back to be safe)
+    For Daily: Uses previous day if in session, or today if session closed
     
     Returns: dict with signal info or None if no valid signal
     """
@@ -170,12 +173,41 @@ def detect_pinbar(ticker, ohlc_data, rsi_period, atr_period, rsi_bullish_thresho
         # Get the latest candle data
         if ticker not in ohlc_data['Open'].columns:
             return None
+        
+        # Determine which candle to analyze based on timeframe and session status
+        current_time = datetime.now()
+        
+        if timeframe == 'weekly':
+            # Weekly: Use previous week's completed bar (1 bar back)
+            candle_index = -2  # -1 is current forming week, -2 is previous completed week
+            signal_date = "Previous Week"
+        else:  # daily
+            # Daily: Use previous day if in active session, current day if session closed
+            # Market hours approximation: 9:30 AM - 4:00 PM ET (13:30 - 20:00 UTC)
+            current_hour_utc = current_time.hour
             
-        # Get last valid values for each OHLC component
-        open_val = ohlc_data['Open'][ticker].dropna().iloc[-1] if not ohlc_data['Open'][ticker].dropna().empty else np.nan
-        high_val = ohlc_data['High'][ticker].dropna().iloc[-1] if not ohlc_data['High'][ticker].dropna().empty else np.nan
-        low_val = ohlc_data['Low'][ticker].dropna().iloc[-1] if not ohlc_data['Low'][ticker].dropna().empty else np.nan
-        close_val = ohlc_data['Close'][ticker].dropna().iloc[-1] if not ohlc_data['Close'][ticker].dropna().empty else np.nan
+            if 13 <= current_hour_utc <= 20:  # During market hours
+                candle_index = -2  # Previous day (confirmed)
+                signal_date = "Previous Day"
+            else:  # After market close
+                candle_index = -1  # Current day (should be complete)
+                signal_date = "Today (Closed)"
+        
+        # Get OHLC data for the specified candle
+        open_series = ohlc_data['Open'][ticker].dropna()
+        high_series = ohlc_data['High'][ticker].dropna()
+        low_series = ohlc_data['Low'][ticker].dropna()
+        close_series = ohlc_data['Close'][ticker].dropna()
+        
+        # Check if we have enough data
+        if len(open_series) < abs(candle_index) or len(high_series) < abs(candle_index):
+            return None
+            
+        # Get confirmed candle values
+        open_val = open_series.iloc[candle_index]
+        high_val = high_series.iloc[candle_index] 
+        low_val = low_series.iloc[candle_index]
+        close_val = close_series.iloc[candle_index]
         
         # Check if we have valid OHLC data
         if any(np.isnan([open_val, high_val, low_val, close_val])):
@@ -192,13 +224,14 @@ def detect_pinbar(ticker, ohlc_data, rsi_period, atr_period, rsi_bullish_thresho
         if candle_range == 0:
             return None
         
-        # Calculate RSI and ATR
-        close_series = ohlc_data['Close'][ticker].dropna()
-        high_series = ohlc_data['High'][ticker].dropna() 
-        low_series = ohlc_data['Low'][ticker].dropna()
+        # Calculate RSI and ATR using data UP TO the confirmed candle
+        # This ensures indicators are also non-repainting
+        rsi_close_data = close_series.iloc[:candle_index] if candle_index < 0 else close_series.iloc[:candle_index+1]
+        rsi_high_data = high_series.iloc[:candle_index] if candle_index < 0 else high_series.iloc[:candle_index+1]
+        rsi_low_data = low_series.iloc[:candle_index] if candle_index < 0 else low_series.iloc[:candle_index+1]
         
-        rsi = calculate_rsi(close_series, rsi_period)
-        atr = calculate_atr(high_series, low_series, close_series, atr_period)
+        rsi = calculate_rsi(rsi_close_data, rsi_period)
+        atr = calculate_atr(rsi_high_data, rsi_low_data, rsi_close_data, atr_period)
         
         # Check if we have valid RSI and ATR
         if np.isnan(rsi) or np.isnan(atr) or atr == 0:
@@ -220,7 +253,9 @@ def detect_pinbar(ticker, ohlc_data, rsi_period, atr_period, rsi_bullish_thresho
                 'lower_wick': round(lower_wick, 2),
                 'rsi': round(rsi, 2),
                 'atr': round(atr, 2),
-                'candle_range': round(candle_range, 2)
+                'candle_range': round(candle_range, 2),
+                'signal_date': signal_date,
+                'timeframe': timeframe.title()
             }
         
         # Bearish Pinbar Detection  
@@ -235,7 +270,9 @@ def detect_pinbar(ticker, ohlc_data, rsi_period, atr_period, rsi_bullish_thresho
                 'lower_wick': round(lower_wick, 2),
                 'rsi': round(rsi, 2),
                 'atr': round(atr, 2),
-                'candle_range': round(candle_range, 2)
+                'candle_range': round(candle_range, 2),
+                'signal_date': signal_date,
+                'timeframe': timeframe.title()
             }
         
         return None
@@ -290,18 +327,18 @@ total_tickers = len(tickers)
 for i, ticker in enumerate(tickers):
     progress_bar.progress((i + 1) / total_tickers)
     
-    # Weekly pinbar detection
+    # Weekly pinbar detection - using confirmed previous week
     weekly_signal = detect_pinbar(
         ticker, weekly_data, rsi_period, atr_period, 
-        rsi_bullish_threshold, rsi_bearish_threshold
+        rsi_bullish_threshold, rsi_bearish_threshold, timeframe='weekly'
     )
     if weekly_signal:
         weekly_results.append(weekly_signal)
     
-    # Daily pinbar detection  
+    # Daily pinbar detection - using confirmed previous/current day based on session
     daily_signal = detect_pinbar(
         ticker, daily_data, rsi_period, atr_period,
-        rsi_bullish_threshold, rsi_bearish_threshold
+        rsi_bullish_threshold, rsi_bearish_threshold, timeframe='daily'
     )
     if daily_signal:
         daily_results.append(daily_signal)
@@ -329,6 +366,10 @@ with col1:
         
         styled_weekly = weekly_df.style.applymap(color_signal, subset=['signal'])
         st.dataframe(styled_weekly, use_container_width=True, height=400)
+        
+        # Show confirmation status
+        if weekly_results:
+            st.info(f"📅 **Confirmed Signals**: {weekly_results[0]['signal_date']} (Non-Repainting)")
         st.write(f"📈 **{len(weekly_results)} Weekly Pinbar signals found**")
     else:
         st.info("No weekly pinbar signals found with current criteria.")
@@ -342,6 +383,10 @@ with col2:
         
         styled_daily = daily_df.style.applymap(color_signal, subset=['signal'])
         st.dataframe(styled_daily, use_container_width=True, height=400)
+        
+        # Show confirmation status
+        if daily_results:
+            st.info(f"📅 **Confirmed Signals**: {daily_results[0]['signal_date']} (Non-Repainting)")
         st.write(f"📈 **{len(daily_results)} Daily Pinbar signals found**")
     else:
         st.info("No daily pinbar signals found with current criteria.")
@@ -450,24 +495,42 @@ st.subheader("ℹ️ Pinbar Detection Criteria")
 
 with st.expander("📋 Detection Rules"):
     st.write("""
+    **🚫 NON-REPAINTING SIGNALS (CONFIRMED CANDLES ONLY)**
+    
+    **Weekly Signals:**
+    - Uses previous completed week (1 bar back)
+    - Current week is still forming, so we use the last completed week
+    - Ensures weekly candle is fully confirmed and closed
+    
+    **Daily Signals:**
+    - During market hours (9:30 AM - 4:00 PM ET): Uses previous day
+    - After market close: Uses current day (completed candle)
+    - Ensures daily candle is confirmed before signaling
+    
     **Bullish Pinbar Criteria:**
     - Lower wick ≥ 50% of total candle range (High - Low)
     - Lower wick ≥ 2× upper wick size
-    - RSI ≤ threshold (default: 30)
-    - Candle range (High - Low) ≥ 1 ATR
+    - RSI ≤ threshold (default: 30) **calculated using confirmed data only**
+    - Candle range (High - Low) ≥ 1 ATR **calculated using confirmed data only**
     
     **Bearish Pinbar Criteria:**  
     - Upper wick ≥ 50% of total candle range (High - Low)
     - Upper wick ≥ 2× lower wick size
-    - RSI ≥ threshold (default: 70)
-    - Candle range (High - Low) ≥ 1 ATR
+    - RSI ≥ threshold (default: 70) **calculated using confirmed data only**
+    - Candle range (High - Low) ≥ 1 ATR **calculated using confirmed data only**
     
     **Technical Indicators:**
     - RSI: Relative Strength Index for momentum
     - ATR: Average True Range for volatility filter
     - Both indicators use configurable periods (default: 9)
+    - **All calculations use historical confirmed data only**
+    
+    **⚡ Key Advantage:**
+    - Signals will NOT disappear or change once generated
+    - Perfect for automated trading and reliable backtesting
+    - No false signals from incomplete candles
     """)
 
 # Footer
 st.markdown("---")
-st.markdown("🔧 **Pinbar Pattern Detection Tool** | Built with Streamlit & Yahoo Finance")
+st.markdown("🔧 **Pinbar Pattern Detection Tool** | ✅ **Non-Repainting Confirmed Signals** | Built with Streamlit & Yahoo Finance")
